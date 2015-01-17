@@ -1,25 +1,94 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Reproducible Research. Peer Assignment 1."
+output: html_document
 ---
+ 
+This is a data analysys report about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up.
+ 
+```{r}
+library(lattice)
+library(data.table)
+data_all = fread("/Users/alexey/Downloads/activity.csv", sep=",")
+data_all <- transform(data_all, date = as.Date(date))
+data <- data_all[!is.na(data_all$steps)]
+data_na <- data_all[is.na(data_all$steps)]
+steps_by_interval <- data[,list(sum(steps), mean(steps), sd(steps)), by = interval]
+setnames(steps_by_interval, c("interval", "sum", "mean", "std"))
+```
+ 
+1. Mean total number of steps taken per day.
+ 
+```{r}
+steps_by_date <- with(data, tapply(steps, date, sum))
+hist(steps_by_date, main="Histogram of steps taken", xlab="Steps", breaks = 20)
+ 
+mean(steps_by_date)
+median(steps_by_date)
+ 
+```
+ 
+2. The average daily activity pattern
+```{r}
+avgsPerInterval <- steps_by_interval$mean
+plot(avgsPerInterval, type="l")
+```
 
+The the maximum number of steps were taken in interval:
 
-## Loading and preprocessing the data
+```{r}
+steps_by_interval[which.max(avgsPerInterval)]$interval
+```
+ 
+3. Imputing missing values
+```{r, echo=FALSE}
+numberOfmissingValues <- length(data_na[is.na(data_na$steps)][[1]])
+```
+The dataset has `r numberOfmissingValues` total number of missing values.
+Setting the values for NA steps using mean plus standard deviation strategy.
+```{r}
+for(x in 1:numberOfmissingValues) {
+  interval_stats <- steps_by_interval[interval == data_na[x]$interval]
+  data_na[x]$steps <- round(interval_stats$std + interval_stats$mean)
+}
+```
+ 
+Create a new dataset *data_new* that is equal to the original dataset but with the missing data filled in.
+```{r}
+data_new <- data_all
+data_new[is.na(data_new$steps)] <- data_na
+```
 
+Histogram of the total number of steps taken each day with imputed values.
+```{r}
+steps_by_date_new <- with(data_new, tapply(steps, date, sum))
+hist(steps_by_date_new, main="Histogram of steps taken", xlab="Steps", breaks = 20)
+```
 
+Mean and median total number of steps taken per day.
+```{r}
+mean(steps_by_date_new)
+median(steps_by_date_new)
+```
+4. Differences in activity patterns between weekdays and weekends
 
-## What is mean total number of steps taken per day?
+Factor with two variables:
+```{r}
+weekdays_factor <- factor(ifelse(weekdays(data_new$date) %in% c("Saturday","Sunday"), "Weekend", "Weekday"))
+data_new$weekday <- weekdays_factor
+str(weekdays_factor)
+```
 
+The average number of steps taken, averaged across all weekday days or weekend days.
+```{r}
+splitted <- split(data_new, weekdays_factor)
+data_weekday <- splitted$Weekday
+data_weekend <- splitted$Weekend
 
+steps_by_interval_weekday <- data_weekday[,mean(steps), by = interval]
+steps_by_interval_weekday$day <- "Weekday"
+steps_by_interval_weekend <- data_weekend[,mean(steps), by = interval]
+steps_by_interval_weekend$day <- "Weekend"
+data_final_steps <- rbind(steps_by_interval_weekday, steps_by_interval_weekend)
 
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+xyplot(V1 ~ interval | day, data = data_final_steps,layout=c(1,2),type="l",ylab="Steps")
+```
