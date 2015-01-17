@@ -1,15 +1,14 @@
----
-title: "Reproducible Research. Peer Assignment 1."
-output: html_document
----
- 
+Reproducible Research: Peer Assessment 1
+======================================================== 
 This is a data analysys report about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up.
  
+Loading and preprocessing the data
 
 ```r
 library(lattice)
 library(data.table)
-data_all = fread("/Users/alexey/Downloads/activity.csv", sep=",")
+unzip("activity.zip")
+data_all = fread("activity.csv", sep=",")
 data_all <- transform(data_all, date = as.Date(date))
 data <- data_all[!is.na(data_all$steps)]
 data_na <- data_all[is.na(data_all$steps)]
@@ -22,7 +21,7 @@ setnames(steps_by_interval, c("interval", "sum", "mean", "std"))
 
 ```r
 steps_by_date <- with(data, tapply(steps, date, sum))
-hist(steps_by_date, main="Histogram of steps taken", xlab="Steps", breaks = 20)
+hist(steps_by_date, main="Histogram of steps taken", xlab="Steps", breaks = 20) 
 ```
 
 ![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2-1.png) 
