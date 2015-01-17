@@ -20,7 +20,7 @@ setnames(steps_by_interval, c("interval", "sum", "mean", "std"))
  
 ```{r}
 steps_by_date <- with(data, tapply(steps, date, sum))
-hist(steps_by_date, main="Histogram of steps taken", xlab="Steps", breaks = 20)
+hist(steps_by_date, main="Histogram of steps taken", xlab="Steps", breaks = 20) 
  
 mean(steps_by_date)
 median(steps_by_date)
